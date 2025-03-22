@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #74ebd5, #acb6e5);
+        }
+
+        .container {
+            width: 350px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+        }
+
+        .clear-btn {
+            background: #ff9800;
+        }
+
+        .task-list {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .task {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>To-Do List</h2>
+        <input type="text" id="taskInput" placeholder="Nhập công việc..." required>
+        <button onclick="them()">Thêm</button>
+        <button class="clear-btn" onclick="xoaall()">Xóa hết</button>
+        
+        <div class="task-list"></div>
+    </div>
+
+    <script>
+       function them(){
+           var value  = document.querySelector('#taskInput').value;
+           if (value.trim() === '') return;
+
+           fetch('http://localhost:3000/them',{
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ congviec: value })
+              })
+           .then(response => response.text())
+           .then(() => {
+                document.querySelector('#taskInput').value = '';
+                hien(); 
+           });
+       }
+
+       function hien(){
+              fetch('http://localhost:3000/hien')
+              .then(response => response.json())
+              .then(data => {
+                  var list = document.querySelector('.task-list');
+                  list.innerHTML = '';
+                  data.forEach(i => {
+                      list.innerHTML += `
+                        <div class="task">
+                            <span>${i.congviec}</span>
+                            <button class="delete-btn" onclick="xoa('${i._id}')">Xóa</button>
+                        </div>
+                      `;
+                  });
+              })
+              .catch(error => console.error('Lỗi:', error));
+        }
+
+        function xoa(id){
+            fetch('http://localhost:3000/xoa', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ _id: id })
+            })
+            .then(response => response.text())
+            .then(() => hien());
+        }
+
+        function xoaall(){
+            fetch('http://localhost:3000/xoahet', { method: 'DELETE' })
+            .then(response => response.text())
+            .then(() => hien());
+        }
+
+        window.onload = hien;
+    </script>
+
+</body>
+</html>
