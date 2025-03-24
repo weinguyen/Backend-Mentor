@@ -66,8 +66,9 @@
         }
 
         .task-list {
-            margin-top: 15px;
-            text-align: left;
+            max-height: 300px; 
+            overflow-y: auto; 
+            padding-right: 5px;
         }
 
         .task {
@@ -78,6 +79,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .checkbox{
+            width: 20px;
+            height: 20px;
+            margin-right: 20px;
+            
+        }
+        .text{
+            font-size: 20px;
+            
         }
     </style>
 </head>
@@ -118,7 +129,8 @@
                   data.forEach(i => {
                       list.innerHTML += `
                         <div class="task">
-                            <span>${i.congviec}</span>
+                            <span><input type="checkbox" class= "checkbox" onclick = "check(this)" ></span>
+                            <span class = "text">${i.congviec}</span>
                             <button class="delete-btn" onclick="xoa('${i._id}')">Xóa</button>
                         </div>
                       `;
@@ -142,6 +154,18 @@
             .then(response => response.text())
             .then(() => hien());
         }
+        function check(checkbox){
+            if(checkbox.checked){
+                checkbox.parentElement.nextElementSibling.style.textDecoration = "line-through";
+            }else{
+                checkbox.parentElement.nextElementSibling.style.textDecoration = "none";
+            }
+        }
+        document.querySelector('#taskInput').addEventListener('keypress', function(e){
+            if(e.key === 'Enter'){
+                them();
+            }
+        });
 
         window.onload = hien;
     </script>

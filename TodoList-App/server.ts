@@ -1,54 +1,43 @@
-const router = require("express")()
-router.use(require("cors")())
-router.use(require("express").json()) 
 
-var mongodb = require('mongodb');
-const { default: mongoose } = require("mongoose");
-var MongoClient = mongodb.MongoClient;
-var url = 'mongodb://localhost:27017';
-var db;
-MongoClient.connect(url, { useUnifiedTopology: true })
-    .then(client => {
-        db = client.db("test");
-        console.log("✅ Connected to database");
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-        router.listen(3000, () => console.log("🚀 Server running on http://localhost:3000"));
-    })
-    .catch(err => {
-        
-        process.exit(1); 
-    });
+const url = "mongodb://localhost:27017/test";
+mongoose.connect(url, { })
+    .then(() => console.log("✅ Connected to database"))
+    .catch(() => process.exit(1));
 
-    router.post("/them", (req, res) => {
+const todoSchema = new mongoose.Schema({ congviec: String });
+const Todo = mongoose.model("Todolist", todoSchema);
 
-        db.collection("Todolist").find(req.body).toArray()
-            .then(results => {
-                if (results.length === 0) {
-                    db.collection("Todolist").insertOne(req.body)
-                        .then(results => {
-                            res.send("them thanh cong");
-                        })
-                } else {
-                    res.json({ error: "Đã tồn tại" });
-                }
-            })
-          
-    })
-    router.get("/hien", (req, res) => {
-        db.collection("Todolist").find().toArray()
-            .then(results => {
-                res.json(results);
-            })
-    })
-    router.delete("/xoa", (req, res) => {
-        db.collection("Todolist").deleteOne({_id : new mongoose.Types.ObjectId(req.body._id)})
-            .then(results => {
-                res.send(req.body);
-            })
-    })
-    router.delete("/xoahet", (req, res) => {
-        db.collection("Todolist").deleteMany({})
-            .then(results => {
-                res.send("Xóa het thành công");
-            })
-    })
+app.listen(3000, () => console.log("🚀 Server running on http://localhost:3000"));
+
+app.post("/them", async (req, res) => {
+    const exists = await Todo.findOne(req.body);
+    exists ? res.json({ error: "Đã tồn tại" }) : res.send(await Todo.create(req.body));
+});
+
+app.get("/hien", async (_, res) => {
+    const check = await Todo.find();
+    res.json(check);
+});
+
+app.delete("/xoa", async (req, res) => {
+    res.send(await Todo.findByIdAndDelete(req.body._id));
+});
+
+app.delete("/xoahet", async (_, res) => {
+    const xoa = await Todo.deleteMany({});
+    res.send(xoa);
+});
+
+/*
+app.put("/sua", async (req, res) => {
+    const { _id, ...rest } = req.body;
+    res.send(await Todo.findByIdAndUpdate(_id, rest, { new: true }));
+});
+*/
