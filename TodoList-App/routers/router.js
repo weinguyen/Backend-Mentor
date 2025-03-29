@@ -43,4 +43,5 @@ router.post("/them", control.them);
 router.get("/hien", control.hien);
 router.delete("/xoa", control.xoa);
 router.delete("/xoahet", control.xoahet);
+router.put("/dichuyen", control.dichuyen);
 exports.default = router;

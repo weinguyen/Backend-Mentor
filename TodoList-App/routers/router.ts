@@ -9,4 +9,5 @@ router.get("/hien",
 );
 router.delete("/xoa", control.xoa);
 router.delete("/xoahet", control.xoahet);
+router.put("/dichuyen",control.dichuyen);
 export default router

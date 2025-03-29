@@ -57,12 +57,13 @@
             opacity: 0.8;
         }
 
-        .delete-btn {
-            background: #dc3545;
-        }
-
-        .clear-btn {
-            background: #ff9800;
+        .delete-btn { background: #dc3545; }
+        .clear-btn { background: #ff9800; }
+        .move-btn {
+            background: #007bff;
+            padding: 4px 6px;
+            font-size: 12px;
+            margin: 2px;
         }
 
         .task-list {
@@ -80,63 +81,66 @@
             justify-content: space-between;
             align-items: center;
         }
-        .checkbox{
-            width: 20px;
-            height: 20px;
-            margin-right: 20px;
-            
-        }
-        .text{
-            font-size: 20px;
-            
+
+        .move-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h2>To-Do List</h2>
         <input type="text" id="taskInput" placeholder="Nhập công việc..." required>
         <button onclick="them()">Thêm</button>
         <button class="clear-btn" onclick="xoaall()">Xóa hết</button>
-        
         <div class="task-list"></div>
     </div>
 
     <script>
-       function them(){
-           var value  = document.querySelector('#taskInput').value;
-           if (value.trim() === '') return;
+        function them(){
+            var value  = document.querySelector('#taskInput').value;
+            if (value.trim() === '') return;
 
-           fetch('http://localhost:3000/them',{
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ congviec: value })
-              })
-           .then(response => response.text())
-           .then(() => {
+            fetch('http://localhost:3000/them', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ congviec: value })
+            })
+            .then(response => response.text())
+            .then(() => {
                 document.querySelector('#taskInput').value = '';
                 hien(); 
-           });
-       }
+            });
+        }
 
-       function hien(){
-              fetch('http://localhost:3000/hien')
-              .then(response => response.json())
-              .then(data => {
-                  var list = document.querySelector('.task-list');
-                  list.innerHTML = '';
-                  data.forEach(i => {
-                      list.innerHTML += `
+        function hien(){
+            fetch('http://localhost:3000/hien')
+            .then(response => response.json())
+            .then(data => {
+                var list = document.querySelector('.task-list');
+                var o = new Array();
+                list.innerHTML = '';
+                data.forEach((i) => {
+                    o.push(
+                        {html : `
                         <div class="task">
-                            <span><input type="checkbox" class= "checkbox" onclick = "check(this)" ></span>
-                            <span class = "text">${i.congviec}</span>
+                            <div class="move-container">
+                                <button class="move-btn" onclick="diChuyen('${i._id}', -1)">🔼</button>
+                                <button class="move-btn" onclick="diChuyen('${i._id}', 1)">🔽</button>
+                            </div>
+                            <span>${i.congviec}</span>
                             <button class="delete-btn" onclick="xoa('${i._id}')">Xóa</button>
                         </div>
-                      `;
-                  });
-              })
-              .catch(error => console.error('Lỗi:', error));
+                    `,order : i.order});
+                });
+                o.sort((a,b) => a.order - b.order);
+                o.forEach((i) => {
+                    list.innerHTML += i.html;
+                })
+            })
+            .catch(error => console.error('Lỗi:', error));
         }
 
         function xoa(id){
@@ -154,13 +158,19 @@
             .then(response => response.text())
             .then(() => hien());
         }
-        function check(checkbox){
-            if(checkbox.checked){
-                checkbox.parentElement.nextElementSibling.style.textDecoration = "line-through";
-            }else{
-                checkbox.parentElement.nextElementSibling.style.textDecoration = "none";
-            }
+
+        function diChuyen(id, huong){
+            fetch('http://localhost:3000/dichuyen', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ _id: id, huong: huong })
+            })
+            .then(response => response.text())
+            .then(() => {
+            hien()
+        });
         }
+
         document.querySelector('#taskInput').addEventListener('keypress', function(e){
             if(e.key === 'Enter'){
                 them();
@@ -169,6 +179,5 @@
 
         window.onload = hien;
     </script>
-
 </body>
 </html>
